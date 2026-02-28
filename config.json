@@ -70,6 +70,7 @@
       "secretKey": "6Ldu4R0qAAAAAFauKulV8aV2Z8uowe1ujXG3K5iR"
     }
   },
+  "unsendReaction": ["😡", ""]
   "dashBoard": {
     "enable": false,
     "expireVerifyCode": 300000,
