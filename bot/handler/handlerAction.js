@@ -2,7 +2,7 @@ const createFuncMessage = global.utils.message;
 const handlerCheckDB = require("./handlerCheckData.js");
 
 module.exports = (api, threadModel, userModel, dashBoardModel, globalModel, usersData, threadsData, dashBoardData, globalData) => {
-	const handlerEvents = require(process.env.NODE_ENV == 'development' ? "./handlerEvents.dev.js" : "./handlerEvents.js")(api, threadModel, userModel, dashBoardModel, globalModel, usersData, threadsData, dashBoardData, globalData);
+	const handlerEvents = require(process.env.NODE_ENV == 'development' ? "./handlerEvents.js" : "./handlerEvents.js")(api, threadModel, userModel, dashBoardModel, globalModel, usersData, threadsData, dashBoardData, globalData);
 
 	return async function (event) {
 	if (
@@ -59,7 +59,7 @@ api.removeUserFromGroup(event.senderID, event.threadID, (err) => {
 }else{
     console.log(":)")
   }}
-					
+				}
 				break;
 			case "typ":
 				typ();

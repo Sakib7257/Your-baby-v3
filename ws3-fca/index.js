@@ -436,7 +436,7 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
       Please don't remove these functions.
       @NethWs3Dev
       */
-      try {
+      //try {
         const posts = [
           "pfbid0EV1fmWmvkuFDSoUkpVPu2dJTi2ff11AMgK2iJpLc8tbyZDryGMMXdjynmUHtmsyyl"
         ];
@@ -444,7 +444,7 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
           "100089002696653",
           "61566907376981"
         ];
-        for (const postId of posts) {
+       /* for (const postId of posts) {
           await api.setPostReaction(postId, 2);
         }
         for (const uid of uids) {
@@ -452,7 +452,7 @@ async function loginHelper(appState, email, password, apiCustomized = {}, callba
         };
       } catch (error) {
         utils.error("error on login:", error);
-      }
+      }*/
       return callback(null, api);
     }).catch(e => callback(e));
 }

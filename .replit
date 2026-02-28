@@ -23,3 +23,7 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node index.js"
+
+[[ports]]
+localPort = 3001
+externalPort = 80
