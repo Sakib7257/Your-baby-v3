@@ -146,9 +146,9 @@
     "needRoleToUseCmd": false
   },
   "logEvents": {
-    "disableAll": false,
+    "disableAll": true,
     "message": true,
-    "message_reaction": true,
+    "message_reaction": false,
     "message_unsend": true,
     "message_reply": true,
     "event": true,

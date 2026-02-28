@@ -1,37 +1,25 @@
 module.exports = {
-        config: {
-                name: "ping",
-                version: "1.7",
-                author: "MahMUD",
-                countDown: 5,
-                role: 0,
-                description: {
-                        bn: "বোটের রেসপন্স টাইম বা পিং চেক করুন",
-                        en: "Check the bot's response time or ping",
-                        vi: "Kiểm tra thời gian phản hồi hoặc ping của bot"
-                },
-                category: "general",
-                guide: {
-                        bn: '   {pn}: পিং চেক করতে',
-                        en: '   {pn}: To check ping',
-                        vi: '   {pn}: Để kiểm tra ping'
-                }
-        },
-
-        onStart: async function ({ api, message, event }) {
-                const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68); 
-                if (this.config.author !== authorName) {
-                        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
-                }
-
-                const timeStart = Date.now();
-                const checkingMsg = await message.reply("⏳ Checking bot ping...");
-                const ping = Date.now() - timeStart;
-
-                const response = `✅ 𝐏𝐢𝐧𝐠 𝐂𝐡𝐞𝐜𝐤 𝐑𝐞𝐬𝐮𝐥𝐭\n` +
-                                 `───────────────\n` +
-                                 `📶 𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞 𝐓𝐢𝐦𝐞: ${ping}ms`;
-
-                return api.editMessage(response, checkingMsg.messageID);
-        }
+  config: {
+    name: "ping",
+    aliases: ["ms"],
+    version: "1.0",
+    author: "✨Sakib✨",
+    role: 0,
+    shortDescription: {
+      en: "Displays the current ping of the bot's system."
+    },
+    longDescription: {
+      en: "Displays the current ping of the bot's system."
+    },
+    category: "System",
+    guide: {
+      en: "Use {p}ping to check the current ping of the bot's system."
+    }
+  },
+  onStart: async function ({ api, event, args }) {
+    const timeStart = Date.now();
+    await api.sendMessage(">🎀 𝐁𝐛𝐲 𝐜𝐡𝐞𝐚𝐤𝐢𝐧𝐠 𝐛𝐨𝐭 𝐩𝐢𝐧𝐠", event.threadID);
+    const ping = Date.now() - timeStart;
+    api.sendMessage(`>🎀 𝐁𝐛𝐲, 𝐓𝐡𝐞 𝐜𝐨𝐫𝐫𝐞𝐚𝐜𝐭 𝐩𝐢𝐧𝐠 𝐢𝐬 ${ping}ms.`, event.threadID);
+  }
 };
