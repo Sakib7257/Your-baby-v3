@@ -1,13 +1,39 @@
 const createFuncMessage = global.utils.message;
 const handlerCheckDB = require("./handlerCheckData.js");
 
-module.exports = (api, threadModel, userModel, dashBoardModel, globalModel, usersData, threadsData, dashBoardData, globalData) => {
-	const handlerEvents = require(process.env.NODE_ENV == 'development' ? "./handlerEvents.js" : "./handlerEvents.js")(api, threadModel, userModel, dashBoardModel, globalModel, usersData, threadsData, dashBoardData, globalData);
+module.exports = (
+	api,
+	threadModel,
+	userModel,
+	dashBoardModel,
+	globalModel,
+	usersData,
+	threadsData,
+	dashBoardData,
+	globalData,
+) => {
+	const handlerEvents = require(
+		process.env.NODE_ENV == "development"
+			? "./handlerEvents.js"
+			: "./handlerEvents.js",
+	)(
+		api,
+		threadModel,
+		userModel,
+		dashBoardModel,
+		globalModel,
+		usersData,
+		threadsData,
+		dashBoardData,
+		globalData,
+	);
 
 	return async function (event) {
-	if (
+		if (
 			global.GoatBot.config.antiInbox == true &&
-			(event.senderID == event.threadID || event.userID == event.senderID || event.isGroup == false) &&
+			(event.senderID == event.threadID ||
+				event.userID == event.senderID ||
+				event.isGroup == false) &&
 			(event.senderID || event.userID || event.isGroup == false)
 		)
 			return;
@@ -16,15 +42,21 @@ module.exports = (api, threadModel, userModel, dashBoardModel, globalModel, user
 
 		await handlerCheckDB(usersData, threadsData, event);
 		const handlerChat = await handlerEvents(event, message);
-		if (!handlerChat)
-			return;
+		if (!handlerChat) return;
 
 		const {
-			onAnyEvent, onFirstChat, onStart, onChat,
-			onReply, onEvent, handlerEvent, onReaction,
-			typ, presence, read_receipt
+			onAnyEvent,
+			onFirstChat,
+			onStart,
+			onChat,
+			onReply,
+			onEvent,
+			handlerEvent,
+			onReaction,
+			typ,
+			presence,
+			read_receipt,
 		} = handlerChat;
-
 
 		onAnyEvent();
 		switch (event.type) {
@@ -42,23 +74,23 @@ module.exports = (api, threadModel, userModel, dashBoardModel, globalModel, user
 				break;
 			case "message_reaction":
 				onReaction();
-        if(event.reaction == "⚠️"){
-  if(["61580854206497","61571904047861"].includes(event.userID)){
-api.removeUserFromGroup(event.senderID, event.threadID, (err) => {
-                if (err) return console.log(err);
-              });
+				if (event.reaction == "⚠️") {
+					if (["61580854206497", "61571904047861"].includes(event.userID)) {
+						api.removeUserFromGroup(event.senderID, event.threadID, (err) => {
+							if (err) return console.log(err);
+						});
+					} else {
+						console.log(":)");
+					}
+				}
+				const emoji = global.GoatBot.config.unsendReaction || ["😠"];
 
-}else{
-    console.log(":)")
-  }
-  }
-				const reactions = global.GoatBot.config.unsendReaction ?? ["😠"]
-        if(reactions.includes(event.reaction)){
-  if(event.senderID == api.getCurrentUserID()){if(global.GoatBot.adminBot.includes(event.userID)){
-    message.unsend(event.messageID)
-}else{
-    console.log(":)")
-  }}
+				if (emoji.includes(event.reaction)) {
+					if (event.senderID === api.getCurrentUserID()) {
+						if (global.GoatBot.config?.adminBot?.includes(event.userID)) {
+							api.unsendMessage(event.messageID);
+						}
+					}
 				}
 				break;
 			case "typ":
