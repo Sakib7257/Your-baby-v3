@@ -1,88 +1,188 @@
+const slotMemory = {};
+
 module.exports = {
-  config: {
-    name: "slot",
-    version: "1.0",
-    author: "OtinXSandip",
-    shortDescription: {
-      en: "Slot game",
-    },
-    longDescription: {
-      en: "Slot game.",
-    },
-    category: "Game",
-  },
-  langs: {
-    en: {
-      invalid_amount: "𝑬𝒏𝒕𝒆𝒓 𝐚 𝐯𝐚𝐥𝐢𝐝 𝐚𝐧𝐝 𝐩𝐨𝐬𝐬𝐢𝐭𝐢𝐯𝐞 𝐚𝐦𝐨𝐮𝐧𝐭 𝐭𝐨 𝐛𝐞 𝐜𝐡𝐚𝐧𝐜𝐞 𝐭𝐨 𝐝𝐨𝐮𝐛𝐥𝐞.🎀",
-      not_enough_money: "𝐜𝐡𝐞𝐜𝐤 𝐲𝐨𝐮𝐫 𝐛𝐚𝐥𝐞𝐧𝐜𝐞 𝐢𝐟 𝐲𝐨𝐮 𝐡𝐚𝐯𝐞  𝐭𝐡𝐚𝐭 𝐚𝐦𝐨𝐮𝐧𝐭.>🎀",
-      spin_message: "Spinning...",
-      win_message: ">🎀•𝐁𝐚𝐛𝐲, 𝐘𝐨𝐮 𝐖𝐨𝐧$%1, buddy!",
-      lose_message: "  >🎀    𝐘𝐨𝐮 𝐥𝐨𝐬𝐭 $%1,           			•𝐆𝐚𝐦𝐞 𝐑𝐞𝐬𝐮𝐥𝐭𝐬 .",
-      jackpot_message: "Jackpot! You won $%1 with three %2 symbols, buddy!",
-    },
-  },
-  onStart: async function ({ args, message, event, envCommands, usersData, commandName, getLang }) {
-    const { senderID } = event;
-    const userData = await usersData.get(senderID);
-    const amount = parseInt(args[0]);
+  config: {
+    name: "slot",
+    version: "2.2",
+    author: "SaiF",
+    countDown: 10,
+    category: "game"
+  },
 
-    if (isNaN(amount) || amount <= 0) {
-      return message.reply(getLang("invalid_amount"));
-    }
+  langs: {
+    en: {
+      invalid_amount: "𝐏𝐥𝐞𝐚𝐬𝐞 𝐄𝐧𝐭𝐞𝐫 𝐕𝐚𝐥𝐢𝐝 𝐀𝐦𝐨𝐮𝐧𝐭",
+      not_enough_money: "• 𝐏𝐥𝐞𝐚𝐬𝐞 𝐂𝐡𝐞𝐜𝐤 𝐘𝐨𝐮𝐫 𝐁𝐚𝐥𝐚𝐧𝐜𝐞",
+      too_much_bet: ">🥹 𝐁𝐚𝐛𝐲, 𝐌𝐚𝐱 𝐁𝐞𝐭 𝐈𝐬 𝟏𝟎𝐌",
+      cooldown: "• 𝐁𝐚𝐛𝐲, 𝐘𝐨𝐮 𝐇𝐚𝐯𝐞 𝐑𝐞𝐚𝐜𝐡𝐞𝐝 𝟐𝟎 𝐏𝐥𝐚𝐲𝐬.\n𝐓𝐫𝐲 𝐀𝐠𝐚𝐢𝐧 𝐀𝐟𝐭𝐞𝐫 %1 ⏳",
+      usage: `𝐒𝐋𝐎𝐓 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 
 
-    if (amount > userData.money) {
-      return message.reply(getLang("not_enough_money"));
-    }
+• 𝐬𝐥𝐨𝐭 my — 𝐒𝐡𝐨𝐰 𝐲𝐨𝐮𝐫 𝐬𝐭𝐚𝐭𝐬
+• 𝐬𝐥𝐨𝐭 top [𝐩𝐚𝐠𝐞] — 𝐒𝐡𝐨𝐰 𝐭𝐨𝐩 𝐩𝐥𝐚𝐲𝐞𝐫𝐬 (𝐩𝐚𝐠𝐞 𝐨𝐩𝐭𝐢𝐨𝐧𝐚𝐥)
+• 𝐬𝐥𝐨𝐭 [𝐚𝐦𝐨𝐮𝐧𝐭] — 𝐏𝐥𝐚𝐲 𝐭𝐡𝐞 𝐬𝐥𝐨𝐭 𝐠𝐚𝐦𝐞
+• 𝐬𝐥𝐨𝐭 info — 𝐒𝐡𝐨𝐰 𝐭𝐡𝐢𝐬 𝐦𝐞𝐧𝐮
 
-    // Spin the slots
-    const slots = ["💚", "💛", "💙", "💛", "💚", "💙", "💙", "💛", "💚"];
-    const slot1 = slots[Math.floor(Math.random() * slots.length)];
-    const slot2 = slots[Math.floor(Math.random() * slots.length)];
-    const slot3 = slots[Math.floor(Math.random() * slots.length)];
+[ OWNER: Ryuzaki ]🚩`
+    }
+  },
 
-    // Random chance of winning (22.2%)
-    const winChance = Math.random() * 100;
-    let winnings = 0;
+  onStart: async function({ args, message, event, usersData, getLang }) {
+    const { senderID } = event;
+    let userData = await usersData.get(senderID);
+    if (!userData.data) userData.data = {};
 
-    if (winChance <= 22.2) {
-      winnings = calculateWinnings(slot1, slot2, slot3, amount);
-    } else {
-      winnings = -amount; // Loss
-    }
+    // ===== INIT STATS =====
+    if (!userData.data.slotStats) userData.data.slotStats = { win:0, lose:0, plays:0, highestBet:0 };
+    const stats = userData.data.slotStats;
 
-    await usersData.set(senderID, {
-      money: userData.money + winnings,
-      data: userData.data,
-    });
+    // ===== .slot info =====
+    if (args[0] === "info") return message.reply(getLang("usage"));
 
-    const messageText = getSpinResultMessage(slot1, slot2, slot3, winnings, getLang);
+    // ===== .slot my =====
+    if (args[0] === "my") {
+      const rank = await getUserRank(senderID, usersData);
+      return message.reply(
+`𝐒𝐋𝐎𝐓 𝐒𝐓𝐀𝐓𝐔𝐒 | 🎀
 
-    return message.reply(messageText);
-  },
+• 𝐖𝐢𝐧𝐬: ${stats.win}
+• 𝐋𝐨𝐬𝐬𝐞𝐬: ${stats.lose}
+• 𝐏𝐥𝐚𝐲𝐬: ${stats.plays}
+• 𝐇𝐢𝐠𝐡𝐞𝐬𝐭 𝐁𝐞𝐭: ${formatMoney(stats.highestBet)}
+• 𝐑𝐚𝐧𝐤: #${rank}`
+      );
+    }
+
+    // ===== .slot top / rank (paginated) =====
+    if (args[0] === "top" || args[0] === "rank") {
+      const page = Math.max(1, parseInt(args[1]) || 1);
+      const perPage = 15;
+      const all = await usersData.getAll();
+
+      // Include all users who played (even 0 wins)
+      let list = [];
+      for (const u of all) {
+        const s = u.data?.slotStats;
+        if (s) list.push({ name: u.name || "User", win: s.win || 0 });
+      }
+
+      list.sort((a, b) => b.win - a.win);
+      list.splice(100); // Only top 100
+      const totalPages = Math.ceil(list.length / perPage) || 1;
+      const start = (page - 1) * perPage;
+      const end = start + perPage;
+      const pageList = list.slice(start, end);
+
+      let msg = `👑 | SLOT LEADERBOARD\n\n`;
+      pageList.forEach((u, i) => {
+        const rank = start + i + 1;
+        let line = "";
+        if (rank === 1) line = `🥇 ${u.name} — ${u.win} wins`;
+        else if (rank === 2) line = `🥈 ${u.name} — ${u.win} wins`;
+        else if (rank === 3) line = `🥉 ${u.name} — ${u.win} wins`;
+        else line = `${rank}. ${u.name} — ${u.win} wins`;
+        msg += line + "\n";
+      });
+
+      return message.reply(msg);
+    }
+
+    // ===== GAME START =====
+    const amount = parseShorthand(args[0]);
+    const maxBet = 10_000_000;
+    const maxPlays = 20;
+    const cooldown = 10*60*60*1000;
+    const now = Date.now();
+
+    if(!slotMemory[senderID]) slotMemory[senderID] = { count:0, lastReset:now };
+    const userSlot = slotMemory[senderID];
+
+    if(now-userSlot.lastReset>=cooldown){
+      userSlot.count=0;
+      userSlot.lastReset=now;
+    }
+    if(userSlot.count>=maxPlays){
+      const timeLeft = cooldown-(now-userSlot.lastReset);
+      return message.reply(getLang("cooldown", formatTime(timeLeft)));
+    }
+
+    if(isNaN(amount)||amount<=0) return message.reply(getLang("invalid_amount"));
+    if(amount>maxBet) return message.reply(getLang("too_much_bet"));
+    if(amount>userData.money) return message.reply(getLang("not_enough_money"));
+
+    // ===== SLOT ROLL ~30% WIN =====
+    const slots = ["🩶","💛","💙","💜","🤎"];
+    const results = [
+      slots[Math.floor(Math.random()*slots.length)],
+      slots[Math.floor(Math.random()*slots.length)],
+      slots[Math.floor(Math.random()*slots.length)]
+    ];
+
+    const winChance = 30;
+    if(Math.random()*100<winChance) results[1]=results[0];
+    else if(results[0]===results[1] && results[1]===results[2]) results[2]=slots[Math.floor(Math.random()*slots.length)];
+
+    const winnings = calculateWinnings(results, amount);
+
+    // ===== UPDATE STATS =====
+    stats.plays++;
+    if(amount>stats.highestBet) stats.highestBet=amount;
+    if(winnings>0) stats.win++; else stats.lose++;
+
+    await usersData.set(senderID, { money: userData.money+winnings, data: userData.data });
+
+    userSlot.count++;
+    return message.reply(formatResult(results, winnings));
+  }
 };
 
-function calculateWinnings(slot1, slot2, slot3, betAmount) {
-  if (slot1 === "💚" && slot2 === "💚" && slot3 === "💚") {
-    return betAmount * 10; // Big win
-  } else if (slot1 === "💛" && slot2 === "💛" && slot3 === "💛") {
-    return betAmount * 5;  // Moderate win
-  } else if (slot1 === slot2 && slot2 === slot3) {
-    return betAmount * 3;  // Small win
-  } else if (slot1 === slot2 || slot1 === slot3 || slot2 === slot3) {
-    return betAmount * 2;  // Small win
-  } else {
-    return -betAmount; // Loss
-  }
+// ================= HELPERS =================
+function parseShorthand(input){
+  if(!input) return NaN;
+  const str=input.toUpperCase();
+  let mult=1;
+  if(str.endsWith("K")) mult=1e3;
+  else if(str.endsWith("M")) mult=1e6;
+  else if(str.endsWith("B")) mult=1e9;
+  return parseFloat(str.replace(/[KMB]/,""))*mult;
 }
 
-function getSpinResultMessage(slot1, slot2, slot3, winnings, getLang) {
-  if (winnings > 0) {
-    if (slot1 === "💙" && slot2 === "💙" && slot3 === "💙") {
-      return getLang("jackpot_message", winnings, "💙");
-    } else {
-      return getLang("win_message", winnings) + ` [ ${slot1} | ${slot2} | ${slot3} ]`;
-    }
-  } else {
-    return getLang("lose_message", -winnings) + ` [ ${slot1} | ${slot2} | ${slot3} ]`;
-  }
+function calculateWinnings([a,b,c],bet){
+  if(a===b && b===c) return bet*5;
+  if(a===b || a===c || b===c) return bet*2;
+  return -bet;
+}
+
+function formatResult([a,b,c],winnings){
+  const slotDisplay=`• 𝐆𝐚𝐦𝐞 𝐑𝐞𝐬𝐮𝐥𝐭𝐬: [ ${a} | ${b} | ${c} ]`;
+  const money=formatMoney(Math.abs(winnings));
+  let text="";
+  if(a===b && b===c) text=`• 𝐁𝐚𝐛𝐲, 𝐘𝐨𝐮 𝐇𝐢𝐭 𝐉𝐚𝐜𝐤𝐩𝐨𝐭 🪽\n• 𝐖𝐨𝐧: ${money}$`;
+  else if(winnings>0) text=`• 𝐁𝐚𝐛𝐲, 𝐘𝐨𝐮 𝐖𝐨𝐧 ${money}$`;
+  else text=`• 𝐁𝐚𝐛𝐲, 𝐘𝐨𝐮 𝐋𝐨𝐬𝐭 ${money}$`;
+  return `>🎀\n${text}\n${slotDisplay}`;
+}
+
+function formatMoney(n){
+  if(n>=1e9) return (n/1e9).toFixed(2)+"𝐁";
+  if(n>=1e6) return (n/1e6).toFixed(2)+"𝐌";
+  if(n>=1e3) return (n/1e3).toFixed(2)+"𝐊";
+  return n.toString();
+}
+
+function formatTime(ms){
+  const h=Math.floor(ms/3600000);
+  const m=Math.floor((ms%3600000)/60000);
+  const s=Math.floor((ms%60000)/1000);
+  return `${h}𝐡 ${m}𝐦 ${s}𝐬`;
+}
+
+async function getUserRank(uid,usersData){
+  const all=await usersData.getAll();
+  let list=[];
+  for(const u of all){
+    const s=u.data?.slotStats;
+    if(s) list.push({id:u.userID, win:s.win||0});
+  }
+  list.sort((a,b)=>b.win-a.win);
+  return list.findIndex(u=>u.id===uid)+1;
 }
