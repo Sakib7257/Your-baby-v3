@@ -6,19 +6,10 @@
   },
   "envCommands": {
     "daily": {
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> e4b7481 (Initial commit)
       "rewardDay1": {
         "coin": 100,
         "exp": 10
       },
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 5ad45cf (ok)
->>>>>>> e4b7481 (Initial commit)
       "rewardFirstDay": {
         "coin": 100,
         "exp": 10
