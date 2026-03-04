@@ -213,7 +213,7 @@ async function generateDashboard(analyticsData, usersData) {
 
 module.exports = {
   config: {
-    name: "dashboard",
+    name: "dashboard2",
     version: "12.0",
     category: "system",
     role: 0
