@@ -1,4 +1,4 @@
-const { createCanvas } = require("canvas");
+ const { createCanvas } = require("canvas");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
@@ -29,7 +29,7 @@ function drawIcon(ctx, x, y, letter, color) {
   ctx.fillText(letter, x - 7, y + 7);
 }
 
-async function generateDashboard(analyticsData, usersData) {
+async function generateDashboard(analyticsData, usersData, threadsData) {
   try {
     const width = 1600;
     const height = 900;
@@ -104,6 +104,7 @@ async function generateDashboard(analyticsData, usersData) {
     ctx.fillText("USER & GROUP INFO", midX + 35, midY + 55);
 
     const totalUsers = (await usersData.getAll().catch(()=>[])).length;
+    const totalGroups = (await threadsData.getAll().catch(()=>[])).length;
 
     drawIcon(ctx, midX + 70, midY + 120, "U", "#3b82f6");
     ctx.fillStyle = "white";
@@ -113,7 +114,7 @@ async function generateDashboard(analyticsData, usersData) {
 
     drawIcon(ctx, midX + 70, midY + 190, "G", "#22c55e");
     ctx.fillText("GROUPS", midX + 120, midY + 180);
-    ctx.fillText("0", midX + 120, midY + 210);
+    ctx.fillText(totalGroups, midX + 120, midY + 210);
 
     /* PERFORMANCE */
     const perfY = 470;
@@ -219,10 +220,10 @@ module.exports = {
     role: 0
   },
 
-  onStart: async function ({ api, event, globalData, usersData }) {
+  onStart: async function ({ api, event, globalData, usersData, threadsData }) {
     try {
       const analytics = await globalData.get("analytics").catch(()=>null);
-      const buffer = await generateDashboard(analytics, usersData);
+      const buffer = await generateDashboard(analytics, usersData, threadsData);
 
       if (!buffer)
         return api.sendMessage("Failed to generate dashboard.", event.threadID);
