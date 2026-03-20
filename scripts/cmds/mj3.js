@@ -6,9 +6,9 @@ const sharp = require("sharp");
 module.exports = {
   config: {
     name: "mj3",
-    version: "3.1",
+    version: "6.0",
     role: 2,
-    author: "Ariyan (Fixed)",
+    author: "Final Fix",
     countDown: 30,
     category: "AI"
   },
@@ -20,7 +20,13 @@ module.exports = {
 
     if (!args.length) return message.reply("⚠️ Please provide a prompt.");
 
-    api.setMessageReaction("⏳", event.messageID, () => {}, true);
+    // 🎀 Pookie reaction
+    api.setMessageReaction("🎀", event.messageID, () => {}, true);
+
+    // 💬 Loading message
+    const loadingMsg = await message.reply(
+      "𝐆𝐞𝐧𝐞𝐫𝐚𝐭𝐢𝐧𝐠 𝐲𝐨𝐮𝐫 𝐢𝐦𝐚𝐠𝐞, 𝐩𝐥𝐞𝐚𝐬𝐞 𝐰𝐚𝐢𝐭 𝐛𝐛𝐲..🎀"
+    );
 
     try {
       const prompt = args.join(" ");
@@ -51,7 +57,7 @@ module.exports = {
       const w = meta.width;
       const h = meta.height;
 
-      const grid = await sharp({
+      const gridBuffer = await sharp({
         create: {
           width: w * 2,
           height: h * 2,
@@ -69,7 +75,7 @@ module.exports = {
         .toBuffer();
 
       const file = path.join(__dirname, `mj_${Date.now()}.png`);
-      fs.writeFileSync(file, grid);
+      fs.writeFileSync(file, gridBuffer);
 
       api.sendMessage(
         {
@@ -79,22 +85,34 @@ module.exports = {
         event.threadID,
         (err, info) => {
 
+          // ❌ remove loading message
+          if (loadingMsg?.messageID) {
+            api.unsendMessage(loadingMsg.messageID);
+          }
+
           if (fs.existsSync(file)) fs.unlinkSync(file);
 
           if (info?.messageID) {
             global.GoatBot.onReply.set(info.messageID, {
-              commandName: "mj",
+              commandName: "mj3",
               senderID: event.senderID,
-              urls // 🔥 buffer remove (RAM save)
+              urls
             });
           }
+
+          // ✅ done reaction
+          api.setMessageReaction("✅", event.messageID, () => {}, true);
         },
         event.messageID
       );
 
-      api.setMessageReaction("✅", event.messageID, () => {}, true);
-
     } catch (e) {
+      console.error("GEN ERROR:", e);
+
+      if (loadingMsg?.messageID) {
+        api.unsendMessage(loadingMsg.messageID);
+      }
+
       api.setMessageReaction("❌", event.messageID, () => {}, true);
 
       if (e.code === "ECONNABORTED") {
@@ -110,12 +128,14 @@ module.exports = {
     if (!event.messageReply) return;
 
     const rep = global.GoatBot.onReply.get(event.messageReply.messageID);
-    if (!rep) return;
+    if (!rep || rep.commandName !== "mj3") return;
 
-    if (rep.senderID !== event.senderID) return;
+    if (rep.senderID !== event.senderID) {
+      return message.reply("⚠️ Only command user can select image.");
+    }
 
+    const cmd = event.body.trim().toUpperCase().replace(/\s+/g, "");
     const map = { U1: 0, U2: 1, U3: 2, U4: 3 };
-    const cmd = event.body.trim().toUpperCase();
 
     if (!(cmd in map)) return;
 
@@ -125,24 +145,43 @@ module.exports = {
       const idx = map[cmd];
       const url = rep.urls[idx];
 
-      const img = await axios.get(url, { responseType: "arraybuffer" });
-      const buffer = Buffer.from(img.data);
-
-      const meta = await sharp(buffer).metadata();
-
-      const upscaled = await sharp(buffer)
-        .resize(meta.width * 2, meta.height * 2, {
-          kernel: sharp.kernel.lanczos3
-        })
-        .png()
-        .toBuffer();
+      if (!url) return message.reply("❌ Invalid selection.");
 
       const file = path.join(__dirname, `up_${Date.now()}.png`);
-      fs.writeFileSync(file, upscaled);
+
+      let buffer;
+
+      // 🔥 AI UPSCALE
+      try {
+        const ai = await axios.get(
+          "https://upolzox-port.onrender.com/upscale",
+          {
+            params: { url },
+            responseType: "arraybuffer",
+            timeout: 60000
+          }
+        );
+
+        buffer = Buffer.from(ai.data);
+
+      } catch {
+        // 🔁 fallback
+        const img = await axios.get(url, { responseType: "arraybuffer" });
+        const raw = Buffer.from(img.data);
+
+        const meta = await sharp(raw).metadata();
+
+        buffer = await sharp(raw)
+          .resize(meta.width * 2, meta.height * 2)
+          .png()
+          .toBuffer();
+      }
+
+      fs.writeFileSync(file, buffer);
 
       api.sendMessage(
         {
-          body: `🖼️ Upscaled U${idx + 1}`,
+          body: `🖼️ HD Upscaled U${idx + 1}`,
           attachment: fs.createReadStream(file)
         },
         event.threadID,
@@ -153,6 +192,7 @@ module.exports = {
       );
 
     } catch (e) {
+      console.error("UPSCALE ERROR:", e);
       message.reply("❌ Upscale failed.");
     }
   }

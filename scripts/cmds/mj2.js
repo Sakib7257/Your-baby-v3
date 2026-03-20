@@ -5,20 +5,19 @@ const fs = require('fs-extra');
 module.exports = {
     config: {
         name: "mj2",
-        version: "2.1",
+        version: "3.0",
         role: 0,
-        author: "Upol Zox x Tanjiro",
-        description: "Generate images using MJ Turbo API",
+        author: "Upol Zox x Tanjiro (FIXED)",
+        description: "MJ Turbo with Working Upscale",
         category: "AI",
         guide: "{pn} <prompt>"
     },
 
     onStart: async function ({ api, event, args }) {
-        const { threadID, messageID } = event;
+        const { threadID, messageID, senderID } = event;
 
-        // ✅ Ensure global reply map
         if (!global.client) global.client = {};
-        if (!global.client.onReply) global.client.onReply = new Map();
+        if (!global.client.mj2Store) global.client.mj2Store = {};
 
         const prompt = args.join(" ");
         if (!prompt) {
@@ -28,7 +27,6 @@ module.exports = {
         try {
             api.setMessageReaction("🔍", messageID, () => {}, true);
 
-            // 🔥 API CALL
             const res = await axios.get("https://upoldzox-portal.onrender.com/mj-turbo", {
                 params: { prompt }
             });
@@ -39,22 +37,12 @@ module.exports = {
 
             const imageUrls = res.data.images;
 
-            // 📁 Cache folder
             const cacheDir = __dirname + "/cache";
             if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
 
             const gridPath = `${cacheDir}/mj_${messageID}.jpg`;
 
-            // 🖼️ Load images safely
-            const images = await Promise.all(
-                imageUrls.map(async (url) => {
-                    try {
-                        return await Jimp.read(url);
-                    } catch {
-                        throw new Error("Failed to load one of the images.");
-                    }
-                })
-            );
+            const images = await Promise.all(imageUrls.map(url => Jimp.read(url)));
 
             const w = images[0].bitmap.width;
             const h = images[0].bitmap.height;
@@ -67,74 +55,71 @@ module.exports = {
                 .composite(images[2], 0, h)
                 .composite(images[3], w, h);
 
-            await grid.quality(90).writeAsync(gridPath);
+            await grid.writeAsync(gridPath);
 
-            // 📤 Send result
+            // 🔥 SAVE USER DATA (IMPORTANT FIX)
+            global.client.mj2Store[senderID] = {
+                images: imageUrls,
+                time: Date.now()
+            };
+
             api.sendMessage({
-                body: "🖼️ Reply with U1, U2, U3, or U4 to select image.\n\n👤 Author: Upol Zox x Tanjiro",
+                body: "🖼️ Type U1, U2, U3, or U4 to select image.",
                 attachment: fs.createReadStream(gridPath)
-            }, threadID, (err, info) => {
-
-                api.setMessageReaction("✅", messageID, () => {}, true);
-
-                // 🧹 Clean grid file
-                if (fs.existsSync(gridPath)) fs.unlinkSync(gridPath);
-
-                if (!err && info) {
-                    global.client.onReply.set(info.messageID, {
-                        commandName: "mj",
-                        images: imageUrls,
-                        author: event.senderID
-                    });
-                }
+            }, threadID, () => {
+                fs.unlinkSync(gridPath);
             }, messageID);
 
+            api.setMessageReaction("✅", messageID, () => {}, true);
+
         } catch (err) {
+            console.error(err);
             api.setMessageReaction("❌", messageID, () => {}, true);
             api.sendMessage("❌ Error: " + err.message, threadID, messageID);
         }
     },
 
-    onReply: async function ({ api, event }) {
-        const { threadID, messageID, body, messageReply, senderID } = event;
+    onChat: async function ({ api, event }) {
+        const { threadID, messageID, body, senderID } = event;
 
-        if (!messageReply) return;
+        if (!body) return;
 
-        const data = global.client.onReply.get(messageReply.messageID);
-        if (!data || data.commandName !== "mj") return;
+        const data = global.client.mj2Store?.[senderID];
+        if (!data) return;
 
-        // 🔒 Optional: Only original user can reply
-        if (data.author && data.author !== senderID) {
-            return api.sendMessage("⚠️ Only command user can select image.", threadID, messageID);
+        // ⏳ expire after 2 min
+        if (Date.now() - data.time > 120000) {
+            delete global.client.mj2Store[senderID];
+            return;
         }
 
-        const match = body.trim().toUpperCase().match(/^U([1-4])$/);
+        const match = body.trim().toUpperCase().match(/^U\s*([1-4])$/);
         if (!match) return;
 
         const index = parseInt(match[1]) - 1;
+        const imgUrl = data.images[index];
 
-        if (!data.images[index]) {
+        if (!imgUrl) {
             return api.sendMessage("❌ Invalid choice.", threadID, messageID);
         }
 
         try {
             api.setMessageReaction("✨", messageID, () => {}, true);
 
-            const imgUrl = data.images[index];
             const path = __dirname + `/cache/up_${messageID}.jpg`;
 
-            // 📥 Download selected image
             const img = await axios.get(imgUrl, { responseType: "arraybuffer" });
             fs.writeFileSync(path, Buffer.from(img.data));
 
             api.sendMessage({
-                body: `✅ Here is U${index + 1}\n\n👤 Author: Upol Zox x Tanjiro`,
+                body: `✅ Here is U${index + 1}`,
                 attachment: fs.createReadStream(path)
             }, threadID, () => {
-                if (fs.existsSync(path)) fs.unlinkSync(path);
+                fs.unlinkSync(path);
             }, messageID);
 
         } catch (err) {
+            console.error(err);
             api.sendMessage("❌ Failed to fetch image.", threadID, messageID);
         }
     }
