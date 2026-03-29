@@ -157,7 +157,7 @@ module.exports = {
       fs.writeFileSync(filePath, canvas.toBuffer("image/png"));
 
       return api.sendMessage({
-        body: "TOP 10 counts🎀",
+        body: "Top 10 Counts 🎀",
         attachment: fs.createReadStream(filePath)
       }, event.threadID, () => {
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
