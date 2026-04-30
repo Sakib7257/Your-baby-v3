@@ -58,18 +58,20 @@ module.exports = {
       let cpuCores = "N/A", osInfo = "Linux", nodeVer = process.version || "N/A";
       let totalRam = "N/A", freeRam = "N/A";
       let diskUsage = 0, netInfo = "N/A";
-
-      try {
-        const up = await exec('uptime -p');
-        uptime = up.stdout.trim()
-          .replace("up ", "")
-          .replace("hours", "h")
-          .replace("hour", "h")
-          .replace("minutes", "m")
-          .replace("minute", "m")
-          .trim();
-      } catch {}
-
+try {
+  const up = await exec('uptime -p');
+  uptime = up.stdout
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace("up ", "")
+    .replace(/,/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/hours?/g, "h")
+    .replace(/minutes?/g, "m")
+    .replace(/seconds?/g, "s")
+    .trim();
+} catch {}
       try {
         const c = await exec("top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}'");
         cpu = parseFloat(c.stdout) || 0;
