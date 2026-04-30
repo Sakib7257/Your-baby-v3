@@ -59,18 +59,13 @@ module.exports = {
       let totalRam = "N/A", freeRam = "N/A";
       let diskUsage = 0, netInfo = "N/A";
 try {
-  const up = await exec('uptime -p');
-  uptime = up.stdout
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace("up ", "")
-    .replace(/,/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/hours?/g, "h")
-    .replace(/minutes?/g, "m")
-    .replace(/seconds?/g, "s")
-    .trim();
+  const totalSeconds = Math.floor(process.uptime());
+
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  uptime = `${days}D ${hours}H ${minutes}M`;
 } catch {}
       try {
         const c = await exec("top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}'");
